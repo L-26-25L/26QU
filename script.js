@@ -2,7 +2,7 @@
 // Save/load key
 const STORAGE_KEY = 'lina_grades_v1';
 
-// default config + initial data (from اللي عطيتيني)
+// default config + initial data
 const DEFAULT = {
   aPlusThreshold: 90,
   courses: [
@@ -99,20 +99,19 @@ function loadState(){
     const json = localStorage.getItem(STORAGE_KEY);
     if(json) return JSON.parse(json);
   }catch(e){}
-  // clone default
   return JSON.parse(JSON.stringify(DEFAULT));
 }
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-/* ---------- Sidebar & List ---------- */
+/* ---------- Sidebar ---------- */
 function renderSidebar(){
   coursesList.innerHTML = '';
   state.courses.forEach(c=>{
     const btn = document.createElement('button');
     btn.className = 'course-btn';
-    btn.innerHTML = <span style="font-weight:600">${c.name}</span>;
+    btn.innerHTML = `<span style="font-weight:600">${c.name}</span>`;
     btn.onclick = ()=> onCourseClick(c.id);
     coursesList.appendChild(btn);
   });
@@ -120,17 +119,16 @@ function renderSidebar(){
 
 /* ---------- Dashboard (charts) ---------- */
 function renderDashboard(){
-  // prepare data
   const labels = state.courses.map(c=>c.name);
+
   const bestData = state.courses.map(c=>{
-    // compute top quizzes sum (drop lowest one if more than 1)
     const quizzes = c.items.filter(it=>it.type==='Quiz').map(q=>parseFloat(q.val||0));
     if(quizzes.length<=1) return quizzes.reduce((s,x)=>s+x,0);
     const sorted = quizzes.slice().sort((a,b)=>b-a);
-    // drop lowest one -> count = length - 1
     const take = sorted.slice(0, quizzes.length - 1);
     return take.reduce((s,x)=>s+x,0);
   });
+
   const compareData = state.courses.map(c=>{
     const res = computeMeasuresForCourse(c);
     return res.percent;
@@ -140,16 +138,14 @@ function renderDashboard(){
 
   const aplusInfo = computeAPlus();
   aplusPercent.innerText = (100 - aplusInfo.minGap).toFixed(1) + '%';
-  aplusGap.innerText = ${aplusInfo.minGap.toFixed(1)}% نقص عن ${state.aPlusThreshold}%;
+  aplusGap.innerText = `${aplusInfo.minGap.toFixed(1)}% نقص عن ${state.aPlusThreshold}%`;
 
-  // color aplus card
   const apCard = document.getElementById('aplusCard');
   const apVal = 100 - aplusInfo.minGap;
   if(apVal >= state.aPlusThreshold) apCard.style.background = 'linear-gradient(90deg,#caa32b,#e6d28a)';
   else if(apVal >= state.aPlusThreshold - 6) apCard.style.background = 'linear-gradient(90deg,#ffd86b,#ffc107)';
   else apCard.style.background = 'linear-gradient(90deg,#7fcf7f,#3fb76e)';
 
-  // make/update charts
   if(!bestChart){
     const ctx = document.getElementById('bestQuizzesChart').getContext('2d');
     bestChart = new Chart(ctx, {
@@ -179,38 +175,46 @@ function renderDashboard(){
   saveState();
 }
 
-/* ---------- Course Click / Render detail ---------- */
+/* ---------- Course Click ---------- */
 let activeCourseId = null;
 function onCourseClick(courseId){
   activeCourseId = courseId;
   const course = state.courses.find(c=>c.id===courseId);
   if(!course) return;
-  // update header
+
   courseTitle.innerText = course.name;
-  // render table
   courseTableBody.innerHTML = '';
-  course.items.forEach((it, idx)=>{
+
+  course.items.forEach((it)=>{
     const tr = document.createElement('tr');
-    const tdType = document.createElement('td'); tdType.innerText = it.type; tr.appendChild(tdType);
-    const tdName = document.createElement('td'); tdName.innerText = it.name; tr.appendChild(tdName);
-    const tdMax = document.createElement('td'); tdMax.innerText = it.max; tr.appendChild(tdMax);
+
+    const tdType = document.createElement('td'); 
+    tdType.innerText = it.type;
+    tr.appendChild(tdType);
+
+    const tdName = document.createElement('td'); 
+    tdName.innerText = it.name; 
+    tr.appendChild(tdName);
+
+    const tdMax = document.createElement('td'); 
+    tdMax.innerText = it.max; 
+    tr.appendChild(tdMax);
+
     const tdVal = document.createElement('td');
     tdVal.contentEditable = true;
-    tdVal.innerText = it.val!==undefined?it.val:'';
+    tdVal.innerText = it.val!==undefined ? it.val : '';
     tdVal.oninput = ()=> {
-      // update state value
       const v = parseFloat(tdVal.innerText) || 0;
       it.val = v;
       renderDashboard();
     };
     tr.appendChild(tdVal);
+
     courseTableBody.appendChild(tr);
   });
 
-  // show section
   dashboard.classList.add('hidden');
   courseSection.classList.remove('hidden');
-  // compute current course stats
   updateCourseSummary();
 }
 
@@ -222,7 +226,7 @@ backToDash.onclick = ()=> {
   renderDashboard();
 };
 
-/* calc and save */
+/* calc + save */
 calcCourse.onclick = ()=> {
   updateCourseSummary(true);
 };
@@ -231,47 +235,48 @@ saveCourse.onclick = ()=> {
   alert('تم حفظ البيانات محلياً');
 };
 
-/* compute summary for single course */
+/* compute summary */
 function updateCourseSummary(showAlert){
   if(!activeCourseId) return;
   const course = state.courses.find(c=>c.id===activeCourseId);
   const res = computeMeasuresForCourse(course);
+
   document.getElementById('courseTermWork').innerText = res.termWorkValue.toFixed(2) + ' نقطة';
   document.getElementById('coursePercent').innerText = res.percent.toFixed(1) + '%';
-  // A+ gap
+
   const gap = Math.max(0, state.aPlusThreshold - res.percent);
-  const note = document.getElementById('courseAPlusNote');
-  note.innerText = نقص ${gap.toFixed(1)}% للوصول إلى ${state.aPlusThreshold}% (A+);
-  if(showAlert) alert(النسبة للمقرر ${course.name} = ${res.percent.toFixed(1)}%);
+  document.getElementById('courseAPlusNote').innerText = `نقص ${gap.toFixed(1)}% للوصول إلى ${state.aPlusThreshold}% (A+)`;
+
+  if(showAlert) alert(`النسبة للمقرر ${course.name} = ${res.percent.toFixed(1)}%`);
+
   renderDashboard();
 }
 
-/* compute measures per course */
+/* compute measures */
 function computeMeasuresForCourse(course){
-  // quizzes
   const quizzes = course.items.filter(i=>i.type==='Quiz').map(q=>parseFloat(q.val||0));
   let sumTopQuizzes = 0;
+
   if(quizzes.length<=1) sumTopQuizzes = quizzes.reduce((s,x)=>s+x,0);
   else {
     const sorted = quizzes.slice().sort((a,b)=>b-a);
-    const take = sorted.slice(0, quizzes.length - 1); // drop lowest one
+    const take = sorted.slice(0, quizzes.length - 1);
     sumTopQuizzes = take.reduce((s,x)=>s+x,0);
   }
-  // midterm/report/activity
-  const mids = course.items.filter(i=>i.type==='Midterm' || i.type==='Report' || i.type==='Activity').map(it=>parseFloat(it.val||0));
+
+  const mids = course.items
+    .filter(i=>i.type==='Midterm' || i.type==='Report' || i.type==='Activity')
+    .map(it=>parseFloat(it.val||0));
   const sumMids = mids.reduce((s,x)=>s+x,0);
-  // final
+
   const finalItems = course.items.filter(i=>i.type==='Final');
   const sumFinal = finalItems.reduce((s,x)=>s+parseFloat(x.val||0),0);
 
-  // maxima used
-  const quizzesMax = course.items.filter(i=>i.type==='Quiz').map(q=>q.max).reduce((s,x)=>s+x,0);
-  // but for percent we must use totals that are actually counted: if drop one, subtract its max too
-  let quizzesCountedMax = 0;
   const quizMaxArr = course.items.filter(i=>i.type==='Quiz').map(q=>q.max);
+  let quizzesCountedMax = 0;
+
   if(quizMaxArr.length<=1) quizzesCountedMax = quizMaxArr.reduce((s,x)=>s+x,0);
   else {
-    // drop the smallest max? usually all same, so subtract one
     quizMaxArr.sort((a,b)=>b-a);
     const used = quizMaxArr.slice(0, quizMaxArr.length - 1);
     quizzesCountedMax = used.reduce((s,x)=>s+x,0);
@@ -284,21 +289,24 @@ function computeMeasuresForCourse(course){
 
   const termWorkValue = sumTopQuizzes + sumMids;
   const termMax = quizzesCountedMax + midMax + repMax + actMax;
+
   const totalObtained = termWorkValue + sumFinal;
   const totalMax = termMax + finalMax;
+
   const percent = totalMax>0 ? (totalObtained / totalMax) * 100 : 0;
   const termPercent = termMax>0 ? (termWorkValue / termMax) * 100 : 0;
+
   return { sumTopQuizzes, termWorkValue, totalObtained, totalMax, percent, termPercent };
 }
 
-/* compute average term percent */
+/* average term percent */
 function computeAverageTermPercent(){
   const arr = state.courses.map(c=> computeMeasuresForCourse(c).termPercent );
   const sum = arr.reduce((s,x)=>s+x,0);
-  return arr.length? sum/arr.length : 0;
+  return arr.length ? sum/arr.length : 0;
 }
 
-/* compute A+ */
+/* A+ min gap */
 function computeAPlus(){
   let minGap=Infinity, bestCourse=null;
   state.courses.forEach(c=>{
@@ -309,7 +317,7 @@ function computeAPlus(){
   return {minGap, bestCourse};
 }
 
-/* generate palette */
+/* colors */
 function generateColors(n){
   const palette = ['#4a7ec6','#6a4f6f','#caa32b','#7f3fb7','#3fb76e','#ffb86b','#4fb0b0','#8b5cf6'];
   const out=[];
@@ -317,27 +325,35 @@ function generateColors(n){
   return out;
 }
 
-/* actions: export/import/clear */
+/* import / export / clear */
 function attachActions(){
   document.getElementById('btnMyGrade').onclick = ()=> {
     activeCourseId = null;
     courseSection.classList.add('hidden');
     dashboard.classList.remove('hidden');
   };
+
   document.getElementById('exportBtn').onclick = ()=> {
     const data = JSON.stringify(state, null, 2);
     const blob = new Blob([data], {type:'application/json'});
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement('a');
-    a.href = url; a.download = 'grades_backup.json'; a.click();
+    a.href = url; 
+    a.download = 'grades_backup.json'; 
+    a.click();
+
     URL.revokeObjectURL(url);
   };
+
   document.getElementById('importBtn').onclick = ()=> {
     document.getElementById('importFile').click();
   };
+
   document.getElementById('importFile').onchange = (e)=>{
     const file = e.target.files[0];
     if(!file) return;
+
     const fr = new FileReader();
     fr.onload = ()=> {
       try{
@@ -347,10 +363,13 @@ function attachActions(){
         renderSidebar();
         renderDashboard();
         alert('تم استيراد البيانات');
-      }catch(err){ alert('خطأ في الملف'); }
+      }catch(err){
+        alert('خطأ في الملف');
+      }
     };
     fr.readAsText(file);
   };
+
   document.getElementById('clearBtn').onclick = ()=> {
     if(confirm('تأكيد مسح البيانات المحلية؟')) {
       localStorage.removeItem(STORAGE_KEY);
