@@ -1,1 +1,5 @@
-# 26QU
+
+/26QU/
+ ├─ index.html
+ ├─ style.css
+ └─ script.js
