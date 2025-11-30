@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لينتي - درجاتي الذكية</title>
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- Google font similar to Blackboard -->
-<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,100 +16,48 @@
       <div class="brand-sub">My Grades</div>
     </div>
     <div class="menu">
-      <button id="btnMyGrade" class="menu-item active">
-        <span class="menu-dot gold"></span> <span>My Grade</span>
-      </button>
-      <div id="coursesList" class="courses-list">
-        <!-- injected -->
-      </div>
-
+      <button id="btnMyGrade" class="menu-item active">My Grade</button>
+      <div id="coursesList"></div>
       <div class="actions">
-        <button id="exportBtn" class="small-btn">تصدير</button>
-        <button id="importBtn" class="small-btn">استيراد</button>
-        <button id="clearBtn" class="small-btn danger">مسح المحلي</button>
-        <input id="importFile" type="file" accept="application/json" style="display:none" />
+        <button id="exportBtn">تصدير</button>
+        <button id="importBtn">استيراد</button>
+        <button id="clearBtn">مسح المحلي</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
       </div>
     </div>
   </aside>
 
   <main class="main">
-    <!-- Dashboard (My Grade) -->
-    <section id="dashboard" class="page-section">
-      <header class="page-header">
-        <h1>درجاتي — الملخّص</h1>
-        <div class="header-desc">لوحة تبين أفضل الكويزات، مقارنة المقررات، وأعمال الترم</div>
-      </header>
-
-      <div class="top-grid">
-        <div class="card big">
-          <div class="card-title">أفضل الكويزات لكل مقرر</div>
-          <canvas id="bestQuizzesChart"></canvas>
-        </div>
-
-        <div class="card small">
-          <div class="card-title">مقارنة المقررات (%)</div>
-          <canvas id="compareChart"></canvas>
-        </div>
-
-        <div class="card small ap-card">
-          <div class="card-title">الباقي على A+</div>
-          <div id="aplusCard" class="aplus-content">
-            <div id="aplusPercent" class="aplus-number">--%</div>
-            <div id="aplusGap" class="aplus-text">-- من 90%</div>
-          </div>
-        </div>
-
-        <div class="card small">
-          <div class="card-title">أعمال الترم (بدون Final) — متوسط %</div>
-          <div id="termWorkValue" class="term-number">--%</div>
-        </div>
-      </div>
-
-      <div class="note">اضغطي على اسم مقرر من الشريط اليسار لتحديث الرسوم البيانية وعرض تفاصيل المقرر.</div>
+    <section id="dashboard">
+      <h1>درجاتي — الملخّص</h1>
+      <div>أفضل الكويزات لكل مقرر</div>
+      <canvas id="bestQuizzesChart"></canvas>
+      <div>مقارنة المقررات (%)</div>
+      <canvas id="compareChart"></canvas>
+      <div>الباقي على A+</div>
+      <div id="aplusPercent">--%</div>
+      <div id="aplusGap">--</div>
+      <div>أعمال الترم (بدون Final) — متوسط %</div>
+      <div id="termWorkValue">--%</div>
     </section>
 
-    <!-- Course detail section (hidden by default) -->
-    <section id="courseSection" class="page-section hidden">
-      <div class="course-header">
-        <button id="backToDash" class="small-btn">رجوع</button>
-        <div>
-          <h2 id="courseTitle">اسم المقرر</h2>
-          <div id="courseSub" class="header-desc">تفصيل تقسيم الدرجات وقابلة للتعديل</div>
-        </div>
-        <div class="course-actions">
-          <button id="calcCourse" class="btn">احسب النسبة</button>
-          <button id="saveCourse" class="small-btn">حفظ</button>
-        </div>
-      </div>
-
-      <div class="card table-card">
-        <table id="courseTable">
-          <thead>
-            <tr>
-              <th>Assessment Type</th>
-              <th>Item</th>
-              <th>Total Grade</th>
-              <th>Grade Obtained</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- injected -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="course-footer">
-        <div class="summary card">
-          <div>مجموع أعمال السنة (حسب منهجية): <strong id="courseTermWork">--</strong></div>
-          <div>النسبة الإجمالية للمقرر: <strong id="coursePercent">--%</strong></div>
-          <div id="courseAPlusNote">--</div>
-        </div>
-      </div>
+    <section id="courseSection" class="hidden">
+      <button id="backToDash">رجوع</button>
+      <h2 id="courseTitle"></h2>
+      <table id="courseTable">
+        <thead>
+          <tr><th>نوع التقييم</th><th>المهمة</th><th>الدرجة الكاملة</th><th>الدرجة المحققة</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="calcCourse">احسب النسبة</button>
+      <button id="saveCourse">حفظ</button>
+      <div id="courseTermWork">--</div>
+      <div id="coursePercent">--%</div>
+      <div id="courseAPlusNote">--</div>
     </section>
-
   </main>
 </div>
-
 <script src="script.js"></script>
 </body>
 </html>
